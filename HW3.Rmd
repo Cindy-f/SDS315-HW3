@@ -1,0 +1,239 @@
+---
+date: "2024-02-07"
+output: html_document
+---
+
+### SDS315-HW3
+### Name: Zhou Fan
+### UT EID: zf2949
+### Github link: https://github.com/Cindy-f/SDS315-HW3.git
+
+### Problem 1: Creatinine vs Age
+
+```{r setup, include=FALSE}
+library(patchwork)
+library(ggplot2)
+library(dplyr)
+library(tidyverse)
+library(mosaic)
+library(kableExtra)
+creatinine <- read.csv('creatinine.csv')
+covid <- read.csv('covid.csv')
+milk <- read.csv('milk.csv')
+marketmodel <- read.csv('marketmodel.csv')
+```
+
+
+#### Part A: What creatinine clearance rate should we expect for a 55-year-old? Explain briefly (one or two sentences + equations) how you determined this.
+
+```{r, echo = FALSE}
+# 'lm': linear model
+model_age = lm(creatclear ~ age, data = creatinine)
+coef(model_age) # intercept: 147.8129158; age: -0.6198159
+
+# plug in age = 55:
+creatinine_55 = round(147.8129158-0.6198159 * 55, 2)
+creatinine_55
+```
+We could expect the creatinine clearance rate for a 55-year-old to be 113.72 mL/minute. I determine this by first building a linear model of the relationship between the creatinine clearance rate and age, then plug in the age value of 55 years old.
+
+
+#### Part B: How does creatinine clearance rate change with age? (This should be a single number whose units are ml/minute per year.) Explain briefly (one or two sentences) how you determined this.
+```{r, echo = FALSE}
+# 'lm': linear model
+model_age = lm(creatclear ~ age, data = creatinine)
+coef(model_age) 
+```
+Generally, the expected creatinine clearance rate will decrease by 0.62 mL/minute per year. I determine this by first creating a linear model to approximate the pattern of the relationship between petients' creatine clearance and their ages, then take the coefficient of the model.
+
+
+#### Part C: Whose creatinine clearance rate is healthier (higher) for their age: a 40-year-old with a rate of 135, or a 60-year-old with a rate of 112? Explain briefly (a few sentences + equations) how you determined this.
+```{r, echo = FALSE}
+# residual = actual - predicted
+# our linear model: expected creatinine clearance rate = 147.82 - 0.62 * age
+
+# for the 40-year-old: 
+residual_40 = 135 - (147.82 - 0.62 * 40)
+residual_40
+
+# for the 60-year-old: 
+residual_60 = 112 - (147.82 - 0.62 * 60)
+residual_60
+```
+The 40-year-old is healthier than the 60-year-old for their age. I calculate and compare the residuals for both persons based on the regression model that we got previously. The 40-year-old has a residual of 11.98, and the 60-year-old has a residual of 1.38. Since the 40-year-old has a larger residual and greater creatinine clearance rate is considered healthier, so the 40-year-old is healthier.
+
+
+### Problem 2: 
+
+#### Part A: Introduction of "beta" of a stock: 
+
+The "beta" is a measure of systematic risk of a portfolio compared to the market as a whole. For 1 percent change in the market portfolio, beta is the percentage change in the stocks return. Beta is calculated by dividing the product of the covariance of the security's returns and the market's returns by the variance of the market's returns over a specified period. Different values of beta have different meanings: if beta is less than 1, it means the company has less systematic risk than an average firm; if beta is larger than 1, it means the company has more systematic risk than an average firm; if the beta is equal to 0, then the company has no systematic risk. If the beta is negative, then it has a negative risk premiem (such as the insurance company), such that it excels when all other companies in the stock crash or collapse.
+
+
+#### Part B: the table itself, along with an informative caption below the table, no more than 2-3 sentences in length, to give readers the information necessary to interpret the table.
+
+```{r, echo = FALSE, results = FALSE}
+mkt_AAPL = lm(AAPL~SPY, data = marketmodel)
+coef(mkt_AAPL)
+
+mkt_GOOG = lm(GOOG ~ SPY, data = marketmodel)
+coef(mkt_GOOG)
+
+mkt_MRK = lm(MRK ~ SPY, data = marketmodel)
+coef(mkt_MRK)
+
+mkt_JNJ = lm(JNJ ~ SPY, data = marketmodel)
+coef(mkt_JNJ)
+
+mkt_WMT = lm(WMT ~ SPY, data = marketmodel)
+coef(mkt_WMT)
+
+mkt_TGT = lm(TGT~ SPY, data = marketmodel)
+coef(mkt_TGT)
+
+intercept <- rep(NA, 6)
+slope <- rep(NA, 6)
+r.sq <- rep(NA, 6)
+
+
+# intercepts for stocks
+
+intercept[1] <- coef(mkt_AAPL)[1]
+intercept[2] <- coef(mkt_GOOG)[1]
+intercept[3] <- coef(mkt_MRK)[1]
+intercept[4] <- coef(mkt_JNJ)[1]
+intercept[5] <- coef(mkt_WMT)[1]
+intercept[6] <- coef(mkt_TGT)[1]
+
+
+# slopes for stocks
+slope[1] <- coef(mkt_AAPL)[2]
+slope[2] <- coef(mkt_GOOG)[2]
+slope[3] <- coef(mkt_MRK)[2]
+slope[4] <- coef(mkt_JNJ)[2]
+slope[5] <- coef(mkt_WMT)[2]
+slope[6] <- coef(mkt_TGT)[2]
+
+# r squared;
+r.sq[1] = rsquared(mkt_AAPL)
+r.sq[2] = rsquared(mkt_GOOG)
+r.sq[3] = rsquared(mkt_MRK)
+r.sq[4] = rsquared(mkt_JNJ)
+r.sq[5] = rsquared(mkt_WMT)
+r.sq[6] = rsquared(mkt_TGT)
+
+intercept <- intercept %>% format(scientific = FALSE)
+names <- colnames(marketmodel)[3: ncol(marketmodel)]
+
+table <- tibble(`Ticket Symbol` = names, Intercept = intercept, slope = slope, `R-Squared` = r.sq)
+print(table)
+
+```
+
+
+```{r, echo = FALSE} 
+# professional looking
+
+kable_styling(
+  kable(
+    table,
+    format = 'html',
+    align = 'c',
+    digits = 3,
+    escape = FALSE,
+    bookstabs = TRUE,
+    linesep = ''
+  ),
+  position = 'center',
+  latex_options = 'hold_position'  
+)
+
+```
+Table caption: In the table above, we construct linear models for each of six stocks (AAPM, GOOG, MRK, JNJ, WMT, TGT). 'Intercept' and 'slope' columns correspond to the intercept and slope for each of the linear model, where the slope represent the beta value in the finance context. The last column 'R-Squared' represent the r-squared value for each of our linear model, which is a measure of how good each linear model fits our data.
+
+
+#### Part C: a conclusion that answers two questions: in light of your analysis, which of these six stocks has the lowest systematic risk? And which has the highest systematic risk?
+Based on the table above, we have beta values for each category: AAPL - 1.066; GOOG - 0.997; MRK - 0.714; JNJ - 0.677; WMT - 0.519; TGT - 0.708.
+We have: 0.519 < 0.677 < 0.708 < 0.714 < 0.997 < 1.066. Therefore, WMT has the lowest systematic risk, and AAPL has the
+highest systematic risk. 
+
+
+### Problem 3: COVID-19 deaths for Italy and Spain (in February and March of 2020)
+
+#### Part 1: An estimated growth rate and doubling time for Italy.
+```{r, echo =FALSE}
+
+Italy_data <- covid %>%
+  filter(country == 'Italy')
+
+lm_Italy = lm(log(deaths) ~ days_since_first_death, data = Italy_data)
+coef(lm_Italy)
+doubling_Italy = round(70/18.32, 2)
+print(doubling_Italy)
+```
+The slope of 0.183218 corresponds to a daily growth rate of around 18.322%. According to the rule of 70: we would get the doubling time by dividing the number 70 by the percentage growth rate, which is: 70/18.322 = 3.82 ≈ 4. Therefore, for Italy: the estimated growth rate is 18.322% and doubling time is around 4 days.
+
+#### Part 2: An estimated growth rate and doubling time for Spain. 
+```{r, echo = FALSE}
+
+Spain_data <- covid %>%
+  filter(country == 'Spain')
+
+lm_Spain = lm(log(deaths) ~ days_since_first_death, data = Spain_data)
+coef(lm_Spain)
+doubling_Spain = round(70/27.62, 2)
+print(doubling_Spain)
+
+
+```
+The slope of 0.2762447 corresponds to a daily growth rate of around 27.624%. According to the rule of 70: we would get the doubling time by dividing the number 70 by the percentage growth rate, which is: 70/27.624 = 2.53 ≈ 3. Therefore, for Spain: the estimated growth rate is 27.624% and doubling time is around 3 days.
+
+
+#### Part 3: A line graph showing reported daily deaths over time (using days_since_first_death, rather than calendar date, as the relevant time variable) in each country. Your line graph should have two lines, one for each country, distinguished by their color.
+
+```{r, echo = FALSE}
+combined_plot <- ggplot() +
+  geom_line(data = Italy_data, aes(x = days_since_first_death, y = deaths, color = "Italy"), linetype = "solid") +
+  geom_line(data = Spain_data, aes(x = days_since_first_death, y = deaths, color = "Spain"), linetype = "solid") +
+  labs(title = "Reported Daily Deaths Over Time", x = "Days Since First Death", y = "Count of Daily Death") +
+  scale_color_manual(name = "Country", values = c("Italy" = "blue", "Spain" = "red")) +
+  theme(legend.title = element_blank(), legend.position = "right")
+
+print(combined_plot)
+
+```
+
+
+### Problem 4:
+
+#### In light of the data, what is the estimated price elasticity of demand for milk? Briefly describe what you did – no more than a few sentences, together with your estimate.
+
+
+```{r, echo = FALSE}
+lm_milk = lm(log(sales) ~ log(price), data = milk) 
+coef(lm_milk) # intercept: 4.720604; log(price): -1.618578
+
+K = exp(4.720604)
+K # 112.236
+
+ggplot(milk) + geom_point(aes(x = log(price), y = log(sales))) + geom_abline(intercept = 4.720604, slope = -1.618578, color = 'blue')
+```
+
+(1) The estimated price elasticity of demand for milk is 1.618578(the absolute value). Since the value we got is larger than 1, it is deemed elastic, which suggests that the demand for milk decreases as the price increases. 
+
+(2) What I did: I construct a linear model between the logarithm of sales and logarithm of price, so the intercept value that I got is the logarithm value of K and the coefficient is the estimated price elasticity beta. Then we calculate e^intercept to get the value of K. 
+
+(3) My estimate: Since K = 112.236 and beta(price elasticity of demand) = -1.618578. Therefore we can estimate the quantity of milk demand by:
+Q = 112.236 * (P ^ -1.62), where P is price and Q is milk quantitty demanded by consumers at that price.
+
+
+
+
+
+
+
+
+
+
+
+
